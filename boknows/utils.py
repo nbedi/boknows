@@ -1,6 +1,6 @@
 import requests
 
-url = "http://web1.ncaa.org/stats/StatsSrv/rankings"
+url = 'http://web1.ncaa.org/stats/StatsSrv/rankings'
 
 def csv_dump(sport_code='MBB', academic_year='2015', rpt_weeks='141', div='1', stat_seq='-103'):
     """
@@ -11,7 +11,7 @@ def csv_dump(sport_code='MBB', academic_year='2015', rpt_weeks='141', div='1', s
     :param sport_code:
         NCAA code for desired sport. Defaults to Men's Basketball.
     :param academic_year:
-        Four digit academic year. Defaults to 2015.
+        Four digit academic year. Defaults to end up 12/9/2015.
     :param rpt_weeks:
         NCAA code for end week of returned stats. Defaults to last week of 2015.
     :param div:
@@ -27,6 +27,36 @@ def csv_dump(sport_code='MBB', academic_year='2015', rpt_weeks='141', div='1', s
                 'statSeq': stat_seq,
                 'doWhat': 'showrankings'
                 }
+                
     r = requests.post(url, payload)
-    with open("results.csv", "w") as f:
-        f.write(r.content)
+    files = csv_cleanup(r.content)
+
+    for key in files:
+        with open('test/'+key+'.csv', 'w') as f:
+            f.write(files[key])
+
+def csv_cleanup(content=None):
+    """
+    Cleans up the csv output from NCAA stats. Separates different tables into 
+    individual strings. 
+    
+    Returns a dictionary with filenames as keys and csv strings as values.
+    
+    :param content:
+        Original output from NCAA stats
+    """
+    files = {}
+    
+    if content is None:
+        return files
+    
+    key = ''
+    for line in content.split('\n'):
+        if 'Division' in line:
+            key = line.replace(' ', '')
+            files[key] = ''
+        if ',' in line:
+            files[key] = files[key] + line + '\n'
+    
+    return files
+    
