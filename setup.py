@@ -23,7 +23,12 @@ setup(
     license = "MIT",
     keywords = "ncaa sports college basketball",
     url = "https://github.com/nbedi/boknows",
-    packages=['boknows'],
+    packages=['boknows', 'boknows.cli', 'tests'],
+    entry_points={
+        'console_scripts': [
+            'boknows = boknows.cli:main',
+        ],
+    },
     long_description=read('README.rst'),
     classifiers=[
         "Development Status :: 3 - Alpha",

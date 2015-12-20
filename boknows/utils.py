@@ -1,19 +1,22 @@
+import os
 import requests
 
 url = 'http://web1.ncaa.org/stats/StatsSrv/rankings'
 
-def csv_dump(sport_code='MBB', academic_year='2015', rpt_weeks='141', div='1', stat_seq='-103'):
+def csv_dump(dir_path='dump', sport_code='MBB', academic_year='2015', rpt_weeks='141', div='1', stat_seq='-103'):
     """
     Starting point. Dumps an unparsed, messy csv. Most inputs are based on 
     arbitrary NCAA codes that users should not have to know (except for maybe 
-    sportCode).
+    sport_code).
     
+    :param dir_path:
+        Path to directory to dump CSV files in. Defaults to directory called 'dump'
     :param sport_code:
         NCAA code for desired sport. Defaults to Men's Basketball.
     :param academic_year:
-        Four digit academic year. Defaults to end up 12/9/2015.
+        Four digit academic year. Defaults to 2015.
     :param rpt_weeks:
-        NCAA code for end week of returned stats. Defaults to last week of 2015.
+        NCAA code for end week of returned stats. Defaults to end of 12/9/2015.
     :param div:
         NCAA division. Defaults to 1.
     :param stat_seq:
@@ -31,8 +34,11 @@ def csv_dump(sport_code='MBB', academic_year='2015', rpt_weeks='141', div='1', s
     r = requests.post(url, payload)
     files = csv_cleanup(r.content)
 
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+            
     for key in files:
-        with open('test/'+key+'.csv', 'w') as f:
+        with open(dir_path+'/'+key+'.csv', 'w') as f:
             f.write(files[key])
 
 def csv_cleanup(content=None):
