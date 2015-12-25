@@ -6,6 +6,7 @@ import sys
 if sys.version_info[0] < 3:
     from StringIO import StringIO
 else:
+    from functools import reduce
     from io import StringIO
 
 url = 'http://web1.ncaa.org/stats/StatsSrv/rankings'
