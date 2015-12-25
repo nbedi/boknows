@@ -2,7 +2,11 @@ import os
 import re
 import requests
 import pandas as pd
-from io import StringIO
+import sys
+if sys.version_info[0] < 3:
+    from StringIO import StringIO
+else:
+    from io import StringIO
 
 url = 'http://web1.ncaa.org/stats/StatsSrv/rankings'
 
@@ -52,7 +56,7 @@ def csv_cleanup(content=None):
             files[key] = files[key] + line + '\n'
             
     for value in files.values():
-        csvs.append(pd.read_csv(StringIO(value.decode('utf-8'))))
+        csvs.append(pd.read_csv(StringIO(value)))
     
     merged = reduce(lambda left,right: pd.merge(left, right[right.columns.difference(left.columns.difference(['Name']))], on='Name'), csvs)
     return merged.to_csv()
