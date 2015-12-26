@@ -14,7 +14,7 @@ else:
 
 url = 'http://web1.ncaa.org/stats/StatsSrv/rankings'
 
-def csv_dump(dir_path='dump', sport_code='MBB', academic_year='latest', rpt_weeks='latest', div='1', stat_seq='-101'):
+def csv_dump(dir_path='dump', sport_code='MBB', academic_year='latest', rpt_weeks='latest', div='1', stat_seq='team'):
     """
     Dumps a csv file according to inputs to specified path. Most inputs are based on 
     arbitrary NCAA codes that users should not have to know (except for maybe 
@@ -25,22 +25,22 @@ def csv_dump(dir_path='dump', sport_code='MBB', academic_year='latest', rpt_week
     
     Other inputs documented in utils.ncaa_request.
     """
-    csv = csv_cleanup(ncaa_request('CSV', sport_code, academic_year, rpt_weeks, div, stat_seq))
+    csv_output = csv_cleanup(ncaa_request('CSV', sport_code, academic_year, rpt_weeks, div, stat_seq))
     
     path = dir_path + '/' + sport_code + '/div' + div
         
     if not os.path.exists(path):
         os.makedirs(path)
             
-    with open(path+'/'+academic_year+'.csv', 'w') as f:
-        f.write(csv)
+    with open(path+'/'+csv_output[0]+'.csv', 'w') as f:
+        f.write(csv_output[1])
 
 def csv_cleanup(content=None):
     """
     Cleans up the csv output from NCAA stats. Separates different tables into 
     individual strings. 
     
-    Returns a dictionary with filenames as keys and csv strings as values.
+    Returns a tuple with filename and csv content.
     
     :param content:
         Original output from NCAA stats
@@ -50,6 +50,8 @@ def csv_cleanup(content=None):
     
     if content is None:
         return files
+    
+    filename = content.split('Through Games ',1)[1].split('\n',1)[0].replace('/','')
     
     key = ''
     for line in content.split('\n'):
@@ -63,7 +65,7 @@ def csv_cleanup(content=None):
         csvs.append(pd.read_csv(StringIO(value)))
     
     merged = reduce(lambda left,right: pd.merge(left, right[right.columns.difference(left.columns.difference(['Name']))], on='Name'), csvs)
-    return merged.drop('Rank', 1).to_csv()
+    return (filename, merged.drop('Rank', 1).to_csv())
 
 def ncaa_request(rpt_type, sport_code, academic_year, rpt_weeks, div, stat_seq):
     """
@@ -80,7 +82,8 @@ def ncaa_request(rpt_type, sport_code, academic_year, rpt_weeks, div, stat_seq):
     :param div:
         NCAA division.
     :param stat_seq:
-        NCAA code for specific stats requested.
+        NCAA code for specific stats requested. Generic terms 'team' and 'player' 
+        will return all team or individual stats.
     """
     if academic_year == 'latest':
         academic_year = date.today().year + 1 if date.today().month > 9 else date.today().year
@@ -92,6 +95,8 @@ def ncaa_request(rpt_type, sport_code, academic_year, rpt_weeks, div, stat_seq):
         rw = requests.post('http://web1.ncaa.org/stats/StatsSrv/rankings', weeks_payload)
         rpt_weeks = rw.text.split('div'+div+'val',1)[1].split('\"',2)[1]
         
+    stat_seq = '-101' if stat_seq == 'team' else '-103' if stat_seq == 'player' else stat_seq
+    
     payload = { 'sportCode': sport_code,
                 'academicYear': academic_year,
                 'rptType': rpt_type,
