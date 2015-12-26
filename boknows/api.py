@@ -45,7 +45,7 @@ def get_team(sport_code, div, academic_year, team_name):
     :param team_name:
         NCAA school name with spaces removed.
     """  
-    reader = csv.DictReader(StringIO(utils.get_ncaa_data(sport_code=sport_code, div=div, stat_seq='team', academic_year=academic_year)))
+    reader = csv.DictReader(StringIO(get_ncaa_data(sport_code=sport_code, div=div, stat_seq='team', academic_year=academic_year)))
     
     team_obj = {}
     for team in reader:
@@ -70,7 +70,7 @@ def get_players(sport_code, div, academic_year):
     :param academic_year:
         (Optional) Four digit academic year. Ex: '2015' for 2014-2015. Defaults to 'latest'.
     """ 
-    reader = csv.DictReader(StringIO(utils.get_ncaa_data(sport_code=sport_code, div=div, stat_seq='player', academic_year=academic_year)))
+    reader = csv.DictReader(StringIO(get_ncaa_data(sport_code=sport_code, div=div, stat_seq='player', academic_year=academic_year)))
     return jsonify({'response': list(reader)})
 
 @app.route('/api/v1.0/<string:sport_code>/<string:div>/players/<string:player_name>', defaults={'academic_year': 'latest'}, methods=['GET'])
@@ -90,7 +90,7 @@ def get_player(sport_code, div, academic_year, player_name):
     :param player_name:
         Player name with spaces removed.
     """ 
-    reader = csv.DictReader(StringIO(utils.get_ncaa_data(sport_code=sport_code, div=div, stat_seq='player', academic_year=academic_year)))
+    reader = csv.DictReader(StringIO(get_ncaa_data(sport_code=sport_code, div=div, stat_seq='player', academic_year=academic_year)))
     
     player_obj = {}
     for player in reader:
