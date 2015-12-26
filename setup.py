@@ -15,7 +15,7 @@ def read(fname):
 
 setup(
     name = "boknows",
-    version = "0.0.1",
+    version = "0.0.2",
     author = "Neil Bedi",
     author_email = "neilbedi@gmail.com",
     description = ("Get NCAA stats and figures without the hassle "
