@@ -1,7 +1,7 @@
 from flask import Flask, jsonify
-from boknows import utils
 import csv
 import json
+from utils import get_ncaa_data
 
 import sys
 
@@ -12,8 +12,8 @@ else:
 
 app = Flask(__name__)
 
-@app.route('/api/v1.0/<string:sport_code>/<string:div>/teams', defaults={'academic_year': 'latest'}, methods=['GET'])
-@app.route('/api/v1.0/<string:sport_code>/<string:div>/<string:academic_year>/teams', methods=['GET'])
+@app.route('/api/v1.0/<string:sport_code>/<string:div>/teams/', defaults={'academic_year': 'latest'}, methods=['GET'])
+@app.route('/api/v1.0/<string:sport_code>/<string:div>/<string:academic_year>/teams/', methods=['GET'])
 def get_teams(sport_code, div, academic_year):
     """
     Returns latest data of all teams. Output is a JSON dictionary with 'response' 
@@ -26,7 +26,7 @@ def get_teams(sport_code, div, academic_year):
     :param academic_year:
         (Optional) Four digit academic year. Ex: '2015' for 2014-2015. Defaults to 'latest'.
     """    
-    reader = csv.DictReader(StringIO(utils.get_ncaa_data(sport_code=sport_code, div=div, stat_seq='team', academic_year=academic_year)))
+    reader = csv.DictReader(StringIO(get_ncaa_data(sport_code=sport_code, div=div, stat_seq='team', academic_year=academic_year)))
     return jsonify({'response': list(reader)})
 
 @app.route('/api/v1.0/<string:sport_code>/<string:div>/teams/<string:team_name>', defaults={'academic_year': 'latest'}, methods=['GET'])    
@@ -55,8 +55,8 @@ def get_team(sport_code, div, academic_year, team_name):
             
     return jsonify({'response': [team_obj]})
 
-@app.route('/api/v1.0/<string:sport_code>/<string:div>/players', defaults={'academic_year': 'latest'}, methods=['GET'])
-@app.route('/api/v1.0/<string:sport_code>/<string:div>/<string:academic_year>/players', methods=['GET'])
+@app.route('/api/v1.0/<string:sport_code>/<string:div>/players/', defaults={'academic_year': 'latest'}, methods=['GET'])
+@app.route('/api/v1.0/<string:sport_code>/<string:div>/<string:academic_year>/players/', methods=['GET'])
 def get_players(sport_code, div, academic_year):    
     """
     Returns latest data of all players. Output is a JSON dictionary with 'response' 

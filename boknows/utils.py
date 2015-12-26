@@ -23,6 +23,9 @@ def get_ncaa_data(sport_code, div, stat_seq, academic_year='latest', rpt_weeks='
     All inputs defined in :func:`boknows.utils.ncaa_request` function. Defaults 
     academic_year and rpt_weeks to 'latest'.
     """
+    if academic_year == 'latest':
+        academic_year = date.today().year + 1 if date.today().month > 9 else date.today().year
+        
     payload = { 'sportCode': sport_code, 'academicYear': academic_year }
     latest = requests.post('http://web1.ncaa.org/stats/StatsSrv/rankings', payload)
     latest_date = latest.text.split('div'+div+'txt',1)[1].split('Through Games ',1)[1].split('\"',1)[0].replace('/','')
