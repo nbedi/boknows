@@ -2,7 +2,10 @@ import os
 import re
 import requests
 import pandas as pd
+from datetime import date
+
 import sys
+
 if sys.version_info[0] < 3:
     from StringIO import StringIO
 else:
@@ -11,7 +14,7 @@ else:
 
 url = 'http://web1.ncaa.org/stats/StatsSrv/rankings'
 
-def csv_dump(dir_path='dump', sport_code='MBB', academic_year='2015', rpt_weeks='141', div='1', stat_seq='-101'):
+def csv_dump(dir_path='dump', sport_code='MBB', academic_year='latest', rpt_weeks='latest', div='1', stat_seq='-101'):
     """
     Dumps a csv file according to inputs to specified path. Most inputs are based on 
     arbitrary NCAA codes that users should not have to know (except for maybe 
@@ -20,7 +23,7 @@ def csv_dump(dir_path='dump', sport_code='MBB', academic_year='2015', rpt_weeks=
     :param dir_path:
         Path to directory to dump CSV files in. Defaults to directory called 'dump'
     
-    Other inputs documented in :method:`.ncaa_request`.
+    Other inputs documented in utils.ncaa_request.
     """
     csv = csv_cleanup(ncaa_request('CSV', sport_code, academic_year, rpt_weeks, div, stat_seq))
     
@@ -60,7 +63,7 @@ def csv_cleanup(content=None):
         csvs.append(pd.read_csv(StringIO(value)))
     
     merged = reduce(lambda left,right: pd.merge(left, right[right.columns.difference(left.columns.difference(['Name']))], on='Name'), csvs)
-    return merged.to_csv()
+    return merged.drop('Rank', 1).to_csv()
 
 def ncaa_request(rpt_type, sport_code, academic_year, rpt_weeks, div, stat_seq):
     """
@@ -71,14 +74,24 @@ def ncaa_request(rpt_type, sport_code, academic_year, rpt_weeks, div, stat_seq):
     :param sport_code:
         NCAA code for desired sport.
     :param academic_year:
-        Four digit academic year. Earliest input is 2002.
+        Numerical four digit academic year or 'latest'. Earliest input is 2002.
     :param rpt_weeks:
-        NCAA code for end week of returned stats.
+        Numerical NCAA code for end week of returned stats or 'latest'.
     :param div:
         NCAA division.
     :param stat_seq:
         NCAA code for specific stats requested.
     """
+    if academic_year == 'latest':
+        academic_year = date.today().year + 1 if date.today().month > 9 else date.today().year
+    
+    if rpt_weeks == 'latest':
+        weeks_payload = { 'sportCode': sport_code,
+                          'academicYear': academic_year
+                        }
+        rw = requests.post('http://web1.ncaa.org/stats/StatsSrv/rankings', weeks_payload)
+        rpt_weeks = rw.text.split('div'+div+'val',1)[1].split('\"',2)[1]
+        
     payload = { 'sportCode': sport_code,
                 'academicYear': academic_year,
                 'rptType': rpt_type,
@@ -89,5 +102,4 @@ def ncaa_request(rpt_type, sport_code, academic_year, rpt_weeks, div, stat_seq):
                 }
                 
     r = requests.post(url, payload)
-    return r.content
-    
+    return r.text
