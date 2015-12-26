@@ -14,6 +14,21 @@ else:
 
 url = 'http://web1.ncaa.org/stats/StatsSrv/rankings'
 
+def get_ncaa_data(sport_code, div, stat_seq, academic_year='latest', rpt_weeks='latest'):
+    """
+    """
+    payload = { 'sportCode': sport_code }
+    latest = requests.post('http://web1.ncaa.org/stats/StatsSrv/rankings', payload)
+    latest_date = latest.text.split('div'+div+'txt',1)[1].split('Through Games ',1)[1].split('\"',1)[0].replace('/','')
+    
+    path = 'dump/' + sport_code + '/div' + div
+    
+    if os.path.isfile(path+'/'+latest_date+'_'+stat_seq+'.csv'):
+        return open(path+'/'+latest_date+'_'+stat_seq+'.csv').read()
+    else:
+        return csv_dump(sport_code=sport_code, div=div, stat_seq=stat_seq, academic_year=academic_year, rpt_weeks=rpt_weeks)
+        
+
 def csv_dump(dir_path='dump', sport_code='MBB', academic_year='latest', rpt_weeks='latest', div='1', stat_seq='team'):
     """
     Dumps a csv file according to inputs to specified path. Most inputs are based on 
@@ -32,8 +47,10 @@ def csv_dump(dir_path='dump', sport_code='MBB', academic_year='latest', rpt_week
     if not os.path.exists(path):
         os.makedirs(path)
             
-    with open(path+'/'+csv_output[0]+'.csv', 'w') as f:
+    with open(path+'/'+csv_output[0]+'_'+stat_seq+'.csv', 'w') as f:
         f.write(csv_output[1])
+    
+    return csv_output[1]
 
 def csv_cleanup(content=None):
     """
