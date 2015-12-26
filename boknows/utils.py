@@ -16,6 +16,12 @@ url = 'http://web1.ncaa.org/stats/StatsSrv/rankings'
 
 def get_ncaa_data(sport_code, div, stat_seq, academic_year='latest', rpt_weeks='latest'):
     """
+    Gets NCAA data in CSV format with minimal input. Uses rudimentary caching by 
+    simply loading from file if it has already been created and stored in default 
+    directory.
+    
+    All inputs defined in :func:`boknows.utils.ncaa_request` function. Defaults 
+    academic_year and rpt_weeks to 'latest'.
     """
     payload = { 'sportCode': sport_code }
     latest = requests.post('http://web1.ncaa.org/stats/StatsSrv/rankings', payload)
@@ -38,7 +44,7 @@ def csv_dump(dir_path='dump', sport_code='MBB', academic_year='latest', rpt_week
     :param dir_path:
         Path to directory to dump CSV files in. Defaults to directory called 'dump'
     
-    Other inputs documented in utils.ncaa_request.
+    Other inputs documented in :func:`boknows.utils.ncaa_request`.
     """
     csv_output = csv_cleanup(ncaa_request('CSV', sport_code, academic_year, rpt_weeks, div, stat_seq))
     
@@ -52,7 +58,7 @@ def csv_dump(dir_path='dump', sport_code='MBB', academic_year='latest', rpt_week
     
     return csv_output[1]
 
-def csv_cleanup(content=None):
+def csv_cleanup(content):
     """
     Cleans up the csv output from NCAA stats. Separates different tables into 
     individual strings. 
@@ -81,12 +87,12 @@ def csv_cleanup(content=None):
     for value in files.values():
         csvs.append(pd.read_csv(StringIO(value)))
     
-    merged = reduce(lambda left,right: pd.merge(left, right[right.columns.difference(left.columns.difference(['Name']))], on='Name'), csvs)
+    merged = reduce(lambda left,right: pd.merge(left, right[right.columns.difference(left.columns.difference(['Name']))], how='outer', on='Name'), csvs)
     return (filename, merged.drop('Rank', 1).to_csv())
 
 def ncaa_request(rpt_type, sport_code, academic_year, rpt_weeks, div, stat_seq):
     """
-    Makes request to NCAA web application at http://web1.ncaa.org/stats/StatsSrv/rankings?. 
+    Makes request to NCAA web application at http://web1.ncaa.org/stats/StatsSrv/rankings. 
     
     :param rpt_type:
         Format of response. Can be HTML, ASCII, PDF or CSV.
